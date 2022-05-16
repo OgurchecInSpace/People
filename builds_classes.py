@@ -1,8 +1,8 @@
 # Файл с классами для основной программы
 # Здесь лежат классы каких-либо структур
 import pygame
-# from random import randrange
-from classes_of_peoples import *
+from random import randrange
+from classes_of_people import *
 from constants import *
 
 
@@ -43,10 +43,14 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         self.miners = pygame.sprite.Group()
         self.warriors = pygame.sprite.Group()
 
+    def __repr__(self):
+        return f'Башня на X:{self.rect.x} Y:{self.rect.y}'
+
     def spawn_miner(self):
         new_miner = Miner(len(self.miners), self, self.rect.x, self.rect.y)
         self.miners.add(new_miner)
         self.energy -= cost_miner
+        print('spawn miner')
 
     def spawn_warrior(self):
         new_warrior = Warrior(len(self.warriors), self, self.rect.x, self.rect.y)
@@ -55,14 +59,17 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         print('spawn warrior')
 
     def update(self):
-        if self.energy >= cost_warrior:  # Создаём воинов и шахтёров
-            self.spawn_warrior()
         if self.energy >= cost_miner:
             self.spawn_miner()
+        if self.energy >= cost_warrior:  # Создаём воинов и шахтёров
+            self.spawn_warrior()
 
         if self.health < self.last_health:
             self.status = 'Bad'
             self.last_health = self.health
-        if self.health < 200:
-            self.status = 'Very bad'
-            self.last_health = self.health
+        else:
+            self.status = 'Good'
+        # if self.health < 200:
+        #     self.status = 'Very bad'
+        #     self.last_health = self.health
+
