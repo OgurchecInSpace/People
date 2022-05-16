@@ -1,7 +1,7 @@
 # Основная часть программы
 import pygame
 from constants import *
-from classes_of_peoples import *
+from classes_of_people import *
 from builds_classes import *
 
 WIDTH = 1800
@@ -23,9 +23,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption('Peoples')
 clock = pygame.time.Clock()
 
-Green_tower = Tower(GREEN, 100, 100)
+green_tower = Tower(GREEN, 100, 100)
+red_tower = Tower(RED, WIDTH-500, HEIGHT-200)
 towers = pygame.sprite.Group()
-towers.add(Green_tower)
+towers.add(green_tower)
+towers.add(red_tower)
 
 ores = pygame.sprite.Group()  # Руды
 ore1 = Ore(x=700, y=200, output_energy=gold_output_energy)
@@ -47,6 +49,8 @@ while running:
         tower.update()
         for miner in tower.miners:
             miner.update(ores)
+        for warrior in tower.warriors:
+            warrior.update(towers, ores)
 
     # Рендеринг
     screen.fill(BLUE)
@@ -59,3 +63,4 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+# Придуманным миром удобней управлять...
