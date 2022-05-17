@@ -42,6 +42,7 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         self.energy = 351  # Базовое значение энергии
         self.miners = pygame.sprite.Group()
         self.warriors = pygame.sprite.Group()
+        self.tick = 0
 
     def __repr__(self):
         return f'Башня на X:{self.rect.x} Y:{self.rect.y}'
@@ -59,17 +60,16 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         print('spawn warrior')
 
     def update(self):
-        if self.energy >= cost_miner:
-            self.spawn_miner()
-        if self.energy >= cost_warrior:  # Создаём воинов и шахтёров
-            self.spawn_warrior()
+        self.tick += 1
+        if self.tick % 10 == 0:  # Создаём с некоторой периодичностью воинов и шахтёров
+            if self.energy >= cost_warrior:
+                self.spawn_warrior()
+        if self.tick % 20 == 0:
+            if self.energy >= cost_miner:
+                self.spawn_miner()
 
         if self.health < self.last_health:
             self.status = 'Bad'
             self.last_health = self.health
         else:
             self.status = 'Good'
-        # if self.health < 200:
-        #     self.status = 'Very bad'
-        #     self.last_health = self.health
-
