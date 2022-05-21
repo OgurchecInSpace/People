@@ -19,7 +19,8 @@ class Unit(pygame.sprite.Sprite):  # Класс самого простого ч
         self.speed = 8
         self.health = health
         self.diapason = 0
-        self.position = ''
+        self.position = 'tower'
+        self.on_position = 0
 
     def is_near(self, obj):  # Метод проверки близости к объекту
         if self.rect.x in range(obj.rect.x - self.diapason, obj.rect.x + self.diapason) \
@@ -36,6 +37,7 @@ class Unit(pygame.sprite.Sprite):  # Класс самого простого ч
 
     def go(self, to_x, to_y, speed):
         self.position = 'space'
+        self.on_position = 0
         # Первый способ передвижения на доработке, но и так сойдёт
         leg_x = abs(self.rect.x - to_x)  # один катет
         leg_y = abs(self.rect.y - to_y)  # другой катет
@@ -95,35 +97,56 @@ class Warrior(Unit):  # Класс воина
         self.speed = 10
         self.diapason = warrior_diapason
         self.damage = damage
+        self.position = 'tower'
+        self.status = None
+        self.on_position = 0
+        self.commands = {}
 
     def __repr__(self):
         return f'Воин башни {self.tower}'
 
     def update(self, towers, ores):
-        if self.tower.status == 'Bad' and random.randrange(0, 2):  # Если башню атакуют, то половина воинов идёт туда
+        from builds_classes import Tower, Ore
+        if isinstance(self.tower.command['command'], Tower):
+            tower = self.tower.command['command']
+            if self.is_near(tower):
+                self.attack(tower, is_tower=True)
+            else:
+                self.go(tower.rect.x, tower.rect.y, self.speed)
+        elif isinstance(self.tower.command['command'], Ore):
+            ore = self.tower.command['command']
+            if self.is_near(ore):
+                self.attack(towers)
+            else:
+                self.go(ore.rect.x, ore.rect.y, self.speed)
+        elif self.tower.command['command'] == 'def_tower':
             if self.is_near(self.tower):  # Если башня близко, то ищем ближайшего противника
                 self.attack(towers)
             else:
                 self.go(self.tower.rect.x, self.tower.rect.y, self.speed)
-        else:
-            nearest_ore = self.get_nearest(ores)
-            if self.is_near(nearest_ore):
-                self.attack(towers)
-            else:
-                self.go(nearest_ore.rect.x, nearest_ore.rect.y, self.speed)
 
-    def attack(self, towers):
-        near_warriors = set()
-        for tower in towers:
-            near_warrior = self.get_nearest(tower.warriors)
-            if near_warrior is not None and near_warrior.tower != self.tower:
-                near_warriors.add(near_warrior)
-        near_warrior = self.get_nearest(near_warriors)  # Получили ближайшего противника
-        if near_warrior is not None:
-            if self.is_near(near_warrior):
-                near_warrior.health -= self.damage
-                if near_warrior.health <= 0:
-                    near_warrior.kill()
-                    print(f'{self} убил {near_warrior}')
-            else:
-                self.go(near_warrior.rect.x, near_warrior.rect.y, self.speed)
+    def attack(self, towers, is_tower=False):  # Метод атаки противника (куда без него в симуляции людишек)
+        if is_tower:  # Если мы атакуем башню, то атакуем её (капитан очевидность)
+            towers.health -= self.damage
+            if towers.health <= 0:
+                for warrior in towers.warriors.copy():
+                    warrior.kill()
+                for miner in towers.miners.copy():
+                    miner.kill()
+                towers.kill()
+                print(f'{self} уничтожил башню {towers}')
+        else:  # Если мы не атакуем башню, то ищем ближайших противников от каждой башни
+            near_warriors = set()
+            for tower in towers:
+                near_warrior = self.get_nearest(tower.warriors)
+                if near_warrior is not None and near_warrior.tower != self.tower:
+                    near_warriors.add(near_warrior)
+            near_warrior = self.get_nearest(near_warriors)  # Получили ближайшего противника от всех башен
+            if near_warrior is not None:  # Если он всё-таки существует, то бьём его
+                if self.is_near(near_warrior):  # Если противник рядом
+                    near_warrior.health -= self.damage  # Танком его!
+                    if near_warrior.health <= 0:  # Если ненароком противника убили, то удаляем противника отовсюду
+                        near_warrior.kill()
+                        print(f'{self} убил {near_warrior}')  # И пишем об этом
+                else:  # Если ближайший противник не рядом, то идём к нему
+                    self.go(near_warrior.rect.x, near_warrior.rect.y, self.speed)

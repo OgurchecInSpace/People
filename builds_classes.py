@@ -1,5 +1,7 @@
 # Файл с классами для основной программы
 # Здесь лежат классы каких-либо структур
+import random
+
 import pygame
 from random import randrange
 from classes_of_people import *
@@ -25,6 +27,9 @@ class Ore(pygame.sprite.Sprite):
         energy = self.output_energy
         return energy / 10
 
+    def __repr__(self):
+        return f'Руда с выходной энергией в {self.output_energy} на X: {self.rect.x}, Y: {self.rect.y}'
+
 
 class Tower(pygame.sprite.Sprite):  # Класс башни
     def __init__(self, color, x, y, health=1000):
@@ -43,6 +48,7 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         self.miners = pygame.sprite.Group()
         self.warriors = pygame.sprite.Group()
         self.tick = 0
+        self.command = {'command': None}
 
     def __repr__(self):
         return f'Башня на X:{self.rect.x} Y:{self.rect.y}'
@@ -51,15 +57,15 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         new_miner = Miner(len(self.miners), self, self.rect.x, self.rect.y)
         self.miners.add(new_miner)
         self.energy -= cost_miner
-        print('spawn miner')
+        print(f'Tower {self} is spawning miner')
 
     def spawn_warrior(self):
         new_warrior = Warrior(len(self.warriors), self, self.rect.x, self.rect.y)
         self.warriors.add(new_warrior)
         self.energy -= cost_warrior
-        print('spawn warrior')
+        print(f'Tower {self} is spawning warrior')
 
-    def update(self):
+    def update(self, towers, ores):
         self.tick += 1
         if self.tick % 10 == 0:  # Создаём с некоторой периодичностью воинов и шахтёров
             if self.energy >= cost_warrior:
@@ -67,9 +73,16 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         if self.tick % 20 == 0:
             if self.energy >= cost_miner:
                 self.spawn_miner()
+        if self.tick % 90 == 0:
+            if len(towers) > 0:
+                print('Отдан приказ')
+                tower = random.choice(list(towers))
+                if tower == self:
+                    while tower == self:
+                        tower = random.choice(list(towers))
+                ore = random.choice(list(ores))
+                self.command['command'] = random.choice([tower, ore])
 
         if self.health < self.last_health:
-            self.status = 'Bad'
+            self.command['command'] = 'def_tower'
             self.last_health = self.health
-        else:
-            self.status = 'Good'

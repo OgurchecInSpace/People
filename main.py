@@ -46,7 +46,7 @@ while running:
 
     # Обновление
     for tower in towers:
-        tower.update()
+        tower.update(towers, ores)
         for miner in tower.miners:
             miner.update(ores)
         for warrior in tower.warriors:
@@ -56,7 +56,7 @@ while running:
     screen.fill(BLUE)
     ores.draw(screen)
     towers.draw(screen)
-    for tower in towers:
+    for tower in towers.copy():
         tower.miners.draw(screen)
         tower.warriors.draw(screen)
     # После отрисовки всего, переворачиваем экран
