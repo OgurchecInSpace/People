@@ -45,11 +45,11 @@ while running:
             running = False
 
     # Обновление
-    for tower in towers:
+    for tower in towers.copy():
         tower.update(towers, ores)
-        for miner in tower.miners:
+        for miner in tower.miners.copy():
             miner.update(ores)
-        for warrior in tower.warriors:
+        for warrior in tower.warriors.copy():
             warrior.update(towers, ores)
 
     # Рендеринг

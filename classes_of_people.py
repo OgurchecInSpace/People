@@ -47,7 +47,6 @@ class Unit(pygame.sprite.Sprite):  # Класс самого простого ч
             speed_y = round(speed * (leg_y / hyp))
         else:
             return None
-
         if to_x > self.rect.x:  # По X
             self.rect.x += speed_x
         if to_x < self.rect.x:
@@ -107,6 +106,11 @@ class Warrior(Unit):  # Класс воина
 
     def update(self, towers, ores):
         from builds_classes import Tower, Ore
+        for tower in towers:
+            for warrior in tower.warriors:
+                if self.is_near(warrior):
+                    self.attack(towers)
+
         if isinstance(self.tower.command['command'], Tower):
             tower = self.tower.command['command']
             if self.is_near(tower):

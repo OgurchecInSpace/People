@@ -74,15 +74,20 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
             if self.energy >= cost_miner:
                 self.spawn_miner()
         if self.tick % 90 == 0:
-            if len(towers) > 0:
-                print('Отдан приказ')
+            if len(towers) > 1:
+                print(f'Башня {self} отдала приказ')
                 tower = random.choice(list(towers))
-                if tower == self:
-                    while tower == self:
-                        tower = random.choice(list(towers))
+                while tower == self:
+                    tower = random.choice(list(towers))
                 ore = random.choice(list(ores))
                 self.command['command'] = random.choice([tower, ore])
+            else:
+                ore = random.choice(list(ores))
+                self.command['command'] = ore
 
         if self.health < self.last_health:
             self.command['command'] = 'def_tower'
             self.last_health = self.health
+
+        if self.health <= 0:
+            self.kill()
