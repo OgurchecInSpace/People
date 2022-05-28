@@ -1,7 +1,9 @@
 # Основная часть программы
+import asyncio
 import pygame
 from constants import *
 from classes_of_people import *
+import time
 from builds_classes import *
 
 WIDTH = 1800
@@ -24,7 +26,7 @@ pygame.display.set_caption('Peoples')
 clock = pygame.time.Clock()
 
 green_tower = Tower(GREEN, 100, 100)
-red_tower = Tower(RED, WIDTH-500, HEIGHT-200)
+red_tower = Tower(RED, WIDTH - 500, HEIGHT - 200)
 towers = pygame.sprite.Group()
 towers.add(green_tower)
 towers.add(red_tower)
@@ -32,6 +34,13 @@ towers.add(red_tower)
 ores = pygame.sprite.Group()  # Руды
 ore1 = Ore(x=700, y=200, output_energy=gold_output_energy)
 ores.add(ore1)
+
+
+async def update():
+    for next_tower in towers.copy():
+        new_task = asyncio.create_task(next_tower.update(towers, ores))
+        await new_task
+
 
 # Цикл симуляции
 running = True
@@ -44,13 +53,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # Обновление
-    for tower in towers.copy():
-        tower.update(towers, ores)
-        for miner in tower.miners.copy():
-            miner.update(ores)
-        for warrior in tower.warriors.copy():
-            warrior.update(towers, ores)
+    asyncio.run(update())
+
+    # # Обновление
+    # for tower in towers.copy():
+    #     tower.update(towers, ores)
 
     # Рендеринг
     screen.fill(BLUE)

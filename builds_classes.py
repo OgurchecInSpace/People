@@ -65,7 +65,11 @@ class Tower(pygame.sprite.Sprite):  # Класс башни
         self.energy -= cost_warrior
         print(f'Tower {self} is spawning warrior')
 
-    def update(self, towers, ores):
+    async def update(self, towers, ores):
+        for miner in self.miners:
+            await miner.update(ores)
+        for warrior in self.warriors:
+            await warrior.update(towers, ores)
         self.tick += 1
         if self.tick % 10 == 0:  # Создаём с некоторой периодичностью воинов и шахтёров
             if self.energy >= cost_warrior:

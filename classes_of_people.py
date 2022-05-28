@@ -2,6 +2,7 @@
 import random
 import pygame
 from constants import *
+import asyncio
 
 
 class Unit(pygame.sprite.Sprite):  # Класс самого простого человечка
@@ -35,7 +36,7 @@ class Unit(pygame.sprite.Sprite):  # Класс самого простого ч
                               ((obj.rect.x - self.rect.x) ** 2 + (obj.rect.y - self.rect.y) ** 2) ** 0.5)[-1]
             return obj_near
 
-    def go(self, to_x, to_y, speed):
+    async def go(self, to_x, to_y, speed):
         self.position = 'space'
         self.on_position = 0
         # Первый способ передвижения на доработке, но и так сойдёт
@@ -65,18 +66,18 @@ class Miner(Unit):  # Класс шахтёра, унаследованного 
         self.diapason = miner_diapason
         self.position = 'tower'
 
-    def update(self, ores):  # Метод, в котором идёт выбор того, что шахтёр сейчас будет делать
+    async def update(self, ores):  # Метод, в котором идёт выбор того, что шахтёр сейчас будет делать
         if self.energy >= 100:  # Если энергии больше 100 (т.е. пора отдавать башне)
             if self.is_near(self.tower):  # Если близко к башне, то отдаём ей энергию
                 self.unloading_energy()
             else:  # Если нет, то идём к башне
-                self.go(to_x=self.tower.rect.x, to_y=self.tower.rect.y, speed=self.speed)
+                await self.go(to_x=self.tower.rect.x, to_y=self.tower.rect.y, speed=self.speed)
         else:  # Если нет, то идём копать руду
             ore_near = self.get_nearest(ores)
             if self.is_near(ore_near):  # Если рядом, то копаем её
                 self.mine(ore_near)
             else:  # Если далеко, то идём к ней
-                self.go(ore_near.rect.x, ore_near.rect.y, self.speed)
+                await self.go(ore_near.rect.x, ore_near.rect.y, self.speed)
 
     def mine(self, ore):  # Метод копания
         self.position = 'ore'
@@ -104,32 +105,32 @@ class Warrior(Unit):  # Класс воина
     def __repr__(self):
         return f'Воин башни {self.tower}'
 
-    def update(self, towers, ores):
+    async def update(self, towers, ores):
         from builds_classes import Tower, Ore
         for tower in towers:
             for warrior in tower.warriors:
                 if self.is_near(warrior):
-                    self.attack(towers)
+                    await self.attack(towers)
 
         if isinstance(self.tower.command['command'], Tower):
             tower = self.tower.command['command']
             if self.is_near(tower):
-                self.attack(tower, is_tower=True)
+                await self.attack(tower, is_tower=True)
             else:
-                self.go(tower.rect.x, tower.rect.y, self.speed)
+                await self.go(tower.rect.x, tower.rect.y, self.speed)
         elif isinstance(self.tower.command['command'], Ore):
             ore = self.tower.command['command']
             if self.is_near(ore):
-                self.attack(towers)
+                await self.attack(towers)
             else:
-                self.go(ore.rect.x, ore.rect.y, self.speed)
+                await self.go(ore.rect.x, ore.rect.y, self.speed)
         elif self.tower.command['command'] == 'def_tower':
             if self.is_near(self.tower):  # Если башня близко, то ищем ближайшего противника
-                self.attack(towers)
+                await self.attack(towers)
             else:
-                self.go(self.tower.rect.x, self.tower.rect.y, self.speed)
+                await self.go(self.tower.rect.x, self.tower.rect.y, self.speed)
 
-    def attack(self, towers, is_tower=False):  # Метод атаки противника (куда без него в симуляции людишек)
+    async def attack(self, towers, is_tower=False):  # Метод атаки противника (куда без него в симуляции людишек)
         if is_tower:  # Если мы атакуем башню, то атакуем её (капитан очевидность)
             towers.health -= self.damage
             if towers.health <= 0:
@@ -153,4 +154,4 @@ class Warrior(Unit):  # Класс воина
                         near_warrior.kill()
                         print(f'{self} убил {near_warrior}')  # И пишем об этом
                 else:  # Если ближайший противник не рядом, то идём к нему
-                    self.go(near_warrior.rect.x, near_warrior.rect.y, self.speed)
+                    await self.go(near_warrior.rect.x, near_warrior.rect.y, self.speed)
